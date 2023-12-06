@@ -142,6 +142,12 @@ class InAppUpdateManager(
 
                 // Consent has been gathered.
                 iUpdateInstanceCallback.resultConsentForm(consentInformation.canRequestAds())
+                Log.v(
+                    "InAppUpdateManager", "consentStatus 222 :${
+                        consentInformation.consentStatus
+                    }"
+                )
+
                 if (consentInformation.canRequestAds()) {
                     canRequestAds = true
                     initializeMobileAdsSdk()
