@@ -52,6 +52,7 @@ class MainActivity : AppCompatActivity() {
                         // Need to show Dialog check option then return type
                         return type
                     }
+
                 }
                 return AppUpdateType.FLEXIBLE
             }
