@@ -11,6 +11,7 @@ import com.google.android.play.core.install.model.InstallStatus
 import com.google.android.play.core.tasks.Task
 import com.google.android.ump.ConsentDebugSettings
 import com.google.android.ump.ConsentInformation
+import com.google.android.ump.ConsentInformation.ConsentStatus
 import com.google.android.ump.ConsentRequestParameters
 import com.google.android.ump.UserMessagingPlatform
 
@@ -126,9 +127,14 @@ class InAppUpdateManager(
             Log.v("InAppUpdateManager", "loadConsentForm :Failure")
         })
         consentInformation.requestConsentInfoUpdate(activity, params, {
-
-            Log.v("InAppUpdateManager", "requestConsentInfoUpdate Success")
-
+            when(consentInformation.consentStatus){
+                ConsentStatus.REQUIRED ->{
+                    Log.v("InAppUpdateManager", "ConsentStatus.REQUIRED")
+                }
+                ConsentStatus.OBTAINED ->{
+                    Log.v("InAppUpdateManager", "ConsentStatus.OBTAINED")
+                }
+            }
 
             UserMessagingPlatform.loadAndShowConsentFormIfRequired(
                 activity
@@ -143,12 +149,13 @@ class InAppUpdateManager(
                 // Consent has been gathered.
                 iUpdateInstanceCallback.resultConsentForm(consentInformation.canRequestAds())
                 Log.v(
-                    "InAppUpdateManager", "consentStatus 222 :${
+                    "InAppUpdateManager", "ConsentStatus:${
                         consentInformation.consentStatus
                     }"
                 )
 
                 if (consentInformation.canRequestAds()) {
+
                     canRequestAds = true
                     initializeMobileAdsSdk()
                 }
