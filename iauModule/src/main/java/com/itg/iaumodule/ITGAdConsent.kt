@@ -99,6 +99,15 @@ object ITGAdConsent {
             Log.v("ITGAdConsent", "requestConsentInfoUpdate success")
             callback.onLoadConsentSuccess()
 
+            UserMessagingPlatform.loadConsentForm(callback.getCurrentActivity(), { consentForm ->
+                if (consentInformation?.consentStatus == ConsentInformation.ConsentStatus.NOT_REQUIRED) {
+                    callback.onNotUsingAdConsent()
+                }
+            }, { formError ->
+                // Handle the error.
+                callback.onConsentError(formError)
+            })
+
 //                if (consentInformation.isConsentFormAvailable) {
 //                    loadForm(consentInformation, callback)
 //                } else {
