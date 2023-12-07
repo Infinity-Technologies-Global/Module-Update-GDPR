@@ -2,17 +2,32 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/container"
-    android:layout_gravity="bottom"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_height="match_parent"
+    android:layout_gravity="bottom"
+    android:gravity="bottom|right"
     android:orientation="vertical"
+    android:padding="8dp"
     android:paddingTop="?attr/actionBarSize">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="100dp">
+
+        <ProgressBar
+            android:id="@+id/progress_loading"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:indeterminateTint="@android:color/holo_orange_dark"
+            android:visibility="gone" />
+
+    </LinearLayout>
 
     <Button
         android:id="@+id/button_check_gg_flex"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="GOOGLE_FLEXIBLE"
+        android:text="GOOGLE update FLEXIBLE"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
@@ -22,43 +37,57 @@
         android:id="@+id/button_check_update_gg_immediate"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="GOOGLE_IMMEDIATE"
+        android:text="GOOGLE Update IMMEDIATE"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
 
     <Button
-        android:id="@+id/button_check_update_itg_flex"
+        android:id="@+id/button_load_consent"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="ITG_FLEXIBLE"
+        android:backgroundTint="@android:color/holo_orange_dark"
+        android:text="Load Consent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
-
-    <Button
-        android:id="@+id/button_check_update_itg_immediate"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="ITG_IMMEDIATE"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
 
     <Button
         android:id="@+id/button_show_consent"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Show Consent"
+        android:backgroundTint="@android:color/holo_orange_dark"
+        android:enabled="false"
+        android:text="Show Consent (after load)"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <Button
+        android:id="@+id/button_load_and_show_consent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:backgroundTint="@android:color/holo_orange_dark"
+        android:text="Load And Show Consent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/button_restart_consent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:backgroundTint="@android:color/holo_red_dark"
+        android:text="Reset Consent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
 
 </LinearLayout>

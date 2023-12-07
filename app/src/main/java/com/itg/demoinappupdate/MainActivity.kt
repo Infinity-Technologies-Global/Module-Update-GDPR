@@ -1,16 +1,22 @@
 package com.itg.demoinappupdate
 
+import android.app.Activity
 import android.os.Bundle
+import android.util.Log
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.play.core.appupdate.AppUpdateInfo
 import com.google.android.play.core.install.model.AppUpdateType
 import com.google.android.play.core.install.model.UpdateAvailability
+import com.google.android.ump.FormError
 import com.itg.demoinappupdate.databinding.ActivityMainBinding
+import com.itg.iaumodule.IAdConsentCallBack
+import com.itg.iaumodule.ITGAdConsent
 import com.itg.iaumodule.IUpdateInstanceCallback
-import com.itg.iaumodule.InAppUpdateManager
+import com.itg.iaumodule.ITGUpdateManager
 
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), IAdConsentCallBack {
 
     private val isShowDialogUpdate: Boolean = true
     private lateinit var binding: ActivityMainBinding
@@ -26,26 +32,26 @@ class MainActivity : AppCompatActivity() {
         binding.buttonCheckUpdateGgImmediate.setOnClickListener {
             updateWithType(AppUpdateType.IMMEDIATE, isShowDialogUpdate)
         }
+        binding.buttonLoadConsent.setOnClickListener {
+            ITGAdConsent.loadConsent(this)
+            binding.buttonShowConsent.isEnabled = false
+            binding.progressLoading.visibility = View.VISIBLE
+        }
         binding.buttonShowConsent.setOnClickListener {
-            InAppUpdateManager(this, 100, object : IUpdateInstanceCallback {
-                override fun initializeMobileAdsSdk() {
-
-                }
-
-                override fun resultConsentForm(canRequestAds: Boolean) {
-
-                }
-
-            }).checkBelowGeoEEA(true)
+            ITGAdConsent.showDialogConsent(this)
+//            startActivity(Intent(this, LanguageActivity::class.java))
+        }
+        binding.buttonLoadAndShowConsent.setOnClickListener {
+            binding.progressLoading.visibility = View.VISIBLE
+            ITGAdConsent.loadAndShowConsent(this)
+        }
+        binding.buttonRestartConsent.setOnClickListener {
+            ITGAdConsent.resetConsentDialog()
         }
     }
 
-//    update for all = true // update all users if false check next step below
-//    only GDPR = true // update  for EEA geo if false
-//    if user close the dialog update ( show again after 15s ) in MainActivity
-
     private fun updateWithType(type: Int, isShowDialogUpdate: Boolean) {
-        if (isShowDialogUpdate) InAppUpdateManager(this, 100, object : IUpdateInstanceCallback {
+        if (isShowDialogUpdate) ITGUpdateManager(this, 100, object : IUpdateInstanceCallback {
             override fun updateAvailableListener(updateAvailability: AppUpdateInfo): Int {
                 when (updateAvailability.updateAvailability()) {
                     UpdateAvailability.UPDATE_AVAILABLE -> {
@@ -58,33 +64,41 @@ class MainActivity : AppCompatActivity() {
             }
 
         }).checkUpdateAvailable()
+    }
 
-//        ITGAdConsent.showConsent(this, object : IAdConsentCallBack {
-//            override fun activity(): Activity {
-//                return this@MainActivity
-//            }
-//
-//            override fun isDebug(): Boolean {
-//                return true
-//            }
-//
-//            override fun isUnderAgeAd(): Boolean {
-//                return false
-//            }
-//
-//            override fun onNotUsingAdConsent() {
-//                Log.v("InAppUpdateManager", "onNotUsingAdConsent ")
-//            }
-//
-//            override fun onConsentSuccess() {
-//                Log.v("InAppUpdateManager", "onConsentSuccess :Success")
-//            }
-//
-//            override fun onConsentError(formError: FormError) {
-//                Log.v("InAppUpdateManager", "onConsentError :formError ${formError.message}")
-//
-//            }
-//        })
-//        startActivity(Intent(this, LanguageActivity::class.java))
+    override fun getCurrentActivity(): Activity {
+        return this@MainActivity
+    }
+
+    override fun isDebug(): Boolean {
+        return true
+    }
+
+    override fun isUnderAgeAd(): Boolean {
+        return false
+    }
+
+    override fun onNotUsingAdConsent() {
+        Log.v("ITGAdConsent", "onNotUsingAdConsent")
+        binding.progressLoading.visibility = View.GONE
+        binding.buttonShowConsent.isEnabled = false
+    }
+
+
+    override fun onConsentSuccess() {
+        Log.v("ITGAdConsent", "onConsentSuccess")
+        binding.progressLoading.visibility = View.GONE
+        binding.buttonShowConsent.isEnabled = false
+
+    }
+
+    override fun onConsentError(formError: FormError) {
+        binding.progressLoading.visibility = View.GONE
+        Log.v("ITGAdConsent", "formError  ${formError.message}")
+    }
+
+    override fun onLoadConsentSuccess() {
+        binding.buttonShowConsent.isEnabled = true
+        binding.progressLoading.visibility = View.GONE
     }
 }

@@ -4,7 +4,7 @@ import android.app.Activity
 import com.google.android.ump.FormError
 
 interface IAdConsentCallBack {
-    fun activity(): Activity
+    fun getCurrentActivity(): Activity
 
     fun isDebug(): Boolean
 
@@ -15,4 +15,5 @@ interface IAdConsentCallBack {
     fun onConsentSuccess()
 
     fun onConsentError(formError: FormError)
+    fun onLoadConsentSuccess()
 }

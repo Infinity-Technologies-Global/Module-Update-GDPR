@@ -15,7 +15,7 @@ import com.google.android.ump.ConsentInformation.ConsentStatus
 import com.google.android.ump.ConsentRequestParameters
 import com.google.android.ump.UserMessagingPlatform
 
-class InAppUpdateManager(
+class ITGUpdateManager(
     val activity: Activity,
     val requestCode: Int,
     val iUpdateInstanceCallback: IUpdateInstanceCallback
@@ -28,7 +28,7 @@ class InAppUpdateManager(
 
     private var appUpdateManager: AppUpdateManager? = null
 
-    fun checkUpdateAvailable(): InAppUpdateManager {
+    fun checkUpdateAvailable(): ITGUpdateManager {
         if (appUpdateManager == null) {
             appUpdateManager = AppUpdateManagerFactory.create(activity)
         }
@@ -36,7 +36,7 @@ class InAppUpdateManager(
         return this
     }
 
-    fun checkBelowGeoEEA(isDebug: Boolean): InAppUpdateManager {
+    fun checkBelowGeoEEA(isDebug: Boolean): ITGUpdateManager {
         if (appUpdateManager == null) {
             appUpdateManager = AppUpdateManagerFactory.create(activity)
         }
@@ -135,6 +135,13 @@ class InAppUpdateManager(
                     Log.v("InAppUpdateManager", "ConsentStatus.OBTAINED")
                 }
             }
+            if (consentInformation.consentStatus == ConsentStatus.REQUIRED)
+            {
+
+            }else{
+                Log.v("InAppUpdateManager", "ConsentStatus ${consentInformation.consentStatus}")
+            }
+
 
             UserMessagingPlatform.loadAndShowConsentFormIfRequired(
                 activity

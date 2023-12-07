@@ -1,13 +1,18 @@
 package com.itg.iaumodule
 
 import android.content.Context
+import android.preference.PreferenceManager
 import android.telephony.TelephonyManager
+import android.util.Log
 import com.google.android.ump.ConsentDebugSettings
 import com.google.android.ump.ConsentInformation
 import com.google.android.ump.ConsentRequestParameters
 import com.google.android.ump.UserMessagingPlatform
 
+
 object ITGAdConsent {
+
+    private var consentInformation: ConsentInformation? = null
 
     fun getCountryCode(context: Context): String {
         val tm = context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
@@ -16,8 +21,33 @@ object ITGAdConsent {
 
     fun listEEACountry(): List<String> {
         return listOf(
-            "AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR", "DE", "GR", "HU", "IE",
-            "IT", "LV", "LT", "LU", "MT", "NL", "PL", "PT", "RO", "SK", "SI", "ES", "SE"
+            "AT",
+            "BE",
+            "BG",
+            "HR",
+            "CY",
+            "CZ",
+            "DK",
+            "EE",
+            "FI",
+            "FR",
+            "DE",
+            "GR",
+            "HU",
+            "IE",
+            "IT",
+            "LV",
+            "LT",
+            "LU",
+            "MT",
+            "NL",
+            "PL",
+            "PT",
+            "RO",
+            "SK",
+            "SI",
+            "ES",
+            "SE"
         )
     }
 
@@ -33,69 +63,119 @@ object ITGAdConsent {
         return listAdConsentCountry().contains(getCountryCode(context))
     }
 
-    fun showConsent(context: Context,callback: IAdConsentCallBack) {
-//        if (isAdConsentCountry(context)) {
-//            setupConsent(callback)
-//        } else {
-//            callback.onNotUsingAdConsent()
-//        }
-        setupConsent(callback)
+//    fun showConsent(callback: IAdConsentCallBack) {
+//        loadConsent(callback)
+//    }
 
+    fun loadConsent(callback: IAdConsentCallBack) {
+
+        consentInformation =
+            UserMessagingPlatform.getConsentInformation(callback.getCurrentActivity())
+
+        // Đặt thẻ cho người chưa đủ tuổi đồng ý. sai có nghĩa là người dùng không phải là trẻ vị thành niên.
+        val params = if (callback.isDebug()) {
+
+            val debugSettings = ConsentDebugSettings.Builder(callback.getCurrentActivity())
+                .setDebugGeography(ConsentDebugSettings.DebugGeography.DEBUG_GEOGRAPHY_EEA)
+                .addTestDeviceHashedId("ED3576D8FCF2F8C52AD8E98B4CFA4005").setForceTesting(true)
+                .build()
+
+            ConsentRequestParameters.Builder().setTagForUnderAgeOfConsent(callback.isUnderAgeAd())
+                .setConsentDebugSettings(debugSettings).build()
+
+        } else {
+            ConsentRequestParameters.Builder().setTagForUnderAgeOfConsent(callback.isUnderAgeAd())
+                .build()
+        }
+        if (callback.isDebug()) {
+            consentInformation?.reset() // Remove for Production build
+        }
+
+        consentInformation?.requestConsentInfoUpdate(callback.getCurrentActivity(), params, {
+            // The consent information state was updated.
+            // You are now ready to check if a form is available.
+
+            Log.v("ITGAdConsent", "requestConsentInfoUpdate success")
+            callback.onLoadConsentSuccess()
+
+//                if (consentInformation.isConsentFormAvailable) {
+//                    loadForm(consentInformation, callback)
+//                } else {
+//                    callback.onNotUsingAdConsent()
+//                }
+        }, { formError ->
+            // Handle the error.
+            callback.onConsentError(formError)
+        })
     }
 
-    private fun setupConsent(callback: IAdConsentCallBack) {
+    fun loadAndShowConsent(callback: IAdConsentCallBack) {
 
-        val consentInformation: ConsentInformation =
-            UserMessagingPlatform.getConsentInformation(callback.activity())
+        consentInformation =
+            UserMessagingPlatform.getConsentInformation(callback.getCurrentActivity())
 
         // Set tag for underage of consent. false means users are not underage.
         val params = if (callback.isDebug()) {
 
-            val debugSettings = ConsentDebugSettings.Builder(callback.activity())
+            val debugSettings = ConsentDebugSettings.Builder(callback.getCurrentActivity())
                 .setDebugGeography(ConsentDebugSettings.DebugGeography.DEBUG_GEOGRAPHY_EEA)
-                .addTestDeviceHashedId("ED3576D8FCF2F8C52AD8E98B4CFA4005")
-                .setForceTesting(true)
+                .addTestDeviceHashedId("ED3576D8FCF2F8C52AD8E98B4CFA4005").setForceTesting(true)
                 .build()
 
-            ConsentRequestParameters.Builder()
-                .setTagForUnderAgeOfConsent(callback.isUnderAgeAd())
-                .setConsentDebugSettings(debugSettings)
-                .build()
+            ConsentRequestParameters.Builder().setTagForUnderAgeOfConsent(callback.isUnderAgeAd())
+                .setConsentDebugSettings(debugSettings).build()
 
         } else {
-            ConsentRequestParameters.Builder()
-                .setTagForUnderAgeOfConsent(callback.isUnderAgeAd())
+            ConsentRequestParameters.Builder().setTagForUnderAgeOfConsent(callback.isUnderAgeAd())
                 .build()
         }
+        if (callback.isDebug()) {
+            consentInformation?.reset() // Remove for Production build
+        }
 
-        consentInformation.requestConsentInfoUpdate(callback.activity(), params,
-            {
-                // The consent information state was updated.
-                // You are now ready to check if a form is available.
-                if (consentInformation.isConsentFormAvailable) {
-                    loadForm(consentInformation, callback)
-                } else {
-                    callback.onNotUsingAdConsent()
-                }
-            },
-            { formError ->
-                // Handle the error.
-                callback.onConsentError(formError)
-            })
+        consentInformation?.requestConsentInfoUpdate(callback.getCurrentActivity(), params, {
+            // The consent information state was updated.
+            // You are now ready to check if a form is available.
+            callback.onLoadConsentSuccess()
+
+            Log.v("ITGAdConsent", "requestConsentInfoUpdate success")
+
+            if (consentInformation?.isConsentFormAvailable == true) {
+                loadForm(consentInformation!!, callback)
+            } else {
+                callback.onNotUsingAdConsent()
+            }
+        }, { formError ->
+            // Handle the error.
+            callback.onConsentError(formError)
+        })
+    }
+
+
+    fun showDialogConsent(callback: IAdConsentCallBack) {
+        if (consentInformation?.isConsentFormAvailable == true) {
+            loadForm(consentInformation!!, callback)
+        } else {
+            callback.onNotUsingAdConsent()
+        }
     }
 
     private fun loadForm(consentInformation: ConsentInformation, callback: IAdConsentCallBack) {
         // Loads a consent form. Must be called on the main thread.
-        UserMessagingPlatform.loadConsentForm(callback.activity(), { consentForm ->
+        UserMessagingPlatform.loadConsentForm(callback.getCurrentActivity(), { consentForm ->
             if (consentInformation.consentStatus == ConsentInformation.ConsentStatus.REQUIRED) {
-                consentForm.show(callback.activity()) { formError ->
+                consentForm.show(callback.getCurrentActivity()) { formError ->
                     if (consentInformation.consentStatus == ConsentInformation.ConsentStatus.OBTAINED) {
                         // App can start requesting ads.
                         callback.onConsentSuccess()
                     }
 
-                    // Handle dismissal by reloading form.
-                    loadForm(consentInformation, callback)
+                    val canPersonalized = canShowPersonalizedAds(callback.getCurrentActivity())
+                    if (!canPersonalized) {
+                        // Handle dismissal by reloading form.
+                        loadForm(consentInformation, callback)
+                    }
+
                 }
             } else if (consentInformation.consentStatus == ConsentInformation.ConsentStatus.NOT_REQUIRED) {
                 callback.onNotUsingAdConsent()
@@ -104,6 +184,71 @@ object ITGAdConsent {
             // Handle the error.
             callback.onConsentError(formError)
         })
+    }
+
+    fun canShowPersonalizedAds(context: Context): Boolean {
+        val prefs = PreferenceManager.getDefaultSharedPreferences(context.applicationContext)
+        val purposeConsent: String = prefs.getString("IABTCF_PurposeConsents", "")!!
+        val vendorConsent: String = prefs.getString("IABTCF_VendorConsents", "")!!
+        val vendorLI: String = prefs.getString("IABTCF_VendorLegitimateInterests", "")!!
+        val purposeLI: String = prefs.getString("IABTCF_PurposeLegitimateInterests", "")!!
+        val googleId = 755
+        val hasGoogleVendorConsent = hasAttribute(vendorConsent, googleId)
+        val hasGoogleVendorLI = hasAttribute(vendorLI, googleId)
+        val indexes: MutableList<Int> = ArrayList()
+        indexes.add(1)
+        indexes.add(3)
+        indexes.add(4)
+        val indexesLI: MutableList<Int> = ArrayList()
+        indexesLI.add(2)
+        indexesLI.add(7)
+        indexesLI.add(9)
+        indexesLI.add(10)
+        return (hasConsentFor(
+            indexes, purposeConsent, hasGoogleVendorConsent
+        ) && hasConsentOrLegitimateInterestFor(
+            indexesLI, purposeConsent, purposeLI, hasGoogleVendorConsent, hasGoogleVendorLI
+        ))
+    }
+
+    private fun hasConsentFor(
+        indexes: List<Int>, purposeConsent: String, hasVendorConsent: Boolean
+    ): Boolean {
+        for (p in indexes) {
+            if (!hasAttribute(purposeConsent, p)) {
+                Log.e("ITGAdConsent", "hasConsentFor: denied for purpose #$p")
+                return false
+            }
+        }
+        return hasVendorConsent
+    }
+
+
+    private fun hasAttribute(input: String?, index: Int): Boolean {
+        return if (input == null) false else input.length >= index && input[index - 1] == '1'
+    }
+
+    private fun hasConsentOrLegitimateInterestFor(
+        indexes: List<Int>,
+        purposeConsent: String,
+        purposeLI: String,
+        hasVendorConsent: Boolean,
+        hasVendorLI: Boolean
+    ): Boolean {
+        for (p in indexes) {
+            val purposeAndVendorLI = hasAttribute(purposeLI, p) && hasVendorLI
+            val purposeConsentAndVendorConsent = hasAttribute(purposeConsent, p) && hasVendorConsent
+            val isOk = purposeAndVendorLI || purposeConsentAndVendorConsent
+            if (!isOk) {
+                Log.e("ITGAdConsent", "hasConsentOrLegitimateInterestFor: denied for #$p")
+                return false
+            }
+        }
+        return true
+    }
+
+    fun resetConsentDialog() {
+        consentInformation?.reset()
     }
 
 }
