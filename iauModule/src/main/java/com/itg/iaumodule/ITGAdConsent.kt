@@ -166,20 +166,13 @@ object ITGAdConsent {
         UserMessagingPlatform.loadConsentForm(callback.getCurrentActivity(), { consentForm ->
             if (consentInformation.consentStatus == ConsentInformation.ConsentStatus.REQUIRED) {
                 consentForm.show(callback.getCurrentActivity()) { formError ->
-                    canPersonalized = canShowPersonalizedAds(callback.getCurrentActivity())
                     if (consentInformation.consentStatus == ConsentInformation.ConsentStatus.OBTAINED) {
                         // App can start requesting ads.
+                        canPersonalized = canShowPersonalizedAds(callback.getCurrentActivity())
                         callback.onConsentSuccess(canPersonalized)
                     }
-
-
                     loadForm(consentInformation, callback)
-                    if (!canPersonalized) {
-                        // Handle dismissal by reloading form.
 
-                    }else{
-
-                    }
 
                 }
             } else if (consentInformation.consentStatus == ConsentInformation.ConsentStatus.NOT_REQUIRED) {

@@ -15,5 +15,6 @@ interface IAdConsentCallBack {
     fun onConsentSuccess(canPersonalized: Boolean)
 
     fun onConsentError(formError: FormError)
+
     fun onLoadConsentSuccess()
 }
