@@ -16,5 +16,9 @@ interface IAdConsentCallBack {
 
     fun onConsentError(formError: FormError)
 
-    fun onLoadConsentSuccess()
+    fun onConsentStatus(consentStatus: Int)
+
+    fun testDeviceID(): String {
+        return ""
+    }
 }

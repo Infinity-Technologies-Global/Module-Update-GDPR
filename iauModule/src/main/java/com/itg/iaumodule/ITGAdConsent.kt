@@ -68,58 +68,7 @@ object ITGAdConsent {
 //        loadConsent(callback)
 //    }
 
-    fun loadConsent(callback: IAdConsentCallBack) {
-
-        consentInformation =
-            UserMessagingPlatform.getConsentInformation(callback.getCurrentActivity())
-
-        // Đặt thẻ cho người chưa đủ tuổi đồng ý. sai có nghĩa là người dùng không phải là trẻ vị thành niên.
-        val params = if (callback.isDebug()) {
-
-            val debugSettings = ConsentDebugSettings.Builder(callback.getCurrentActivity())
-                .setDebugGeography(ConsentDebugSettings.DebugGeography.DEBUG_GEOGRAPHY_EEA)
-                .addTestDeviceHashedId("ED3576D8FCF2F8C52AD8E98B4CFA4005").setForceTesting(true)
-                .build()
-
-            ConsentRequestParameters.Builder().setTagForUnderAgeOfConsent(callback.isUnderAgeAd())
-                .setConsentDebugSettings(debugSettings).build()
-
-        } else {
-            ConsentRequestParameters.Builder().setTagForUnderAgeOfConsent(callback.isUnderAgeAd())
-                .build()
-        }
-        if (callback.isDebug()) {
-            consentInformation?.reset() // Remove for Production build
-        }
-
-        consentInformation?.requestConsentInfoUpdate(callback.getCurrentActivity(), params, {
-            // The consent information state was updated.
-            // You are now ready to check if a form is available.
-
-            Log.v("ITGAdConsent", "requestConsentInfoUpdate success")
-            callback.onLoadConsentSuccess()
-
-            UserMessagingPlatform.loadConsentForm(callback.getCurrentActivity(), { consentForm ->
-                if (consentInformation?.consentStatus == ConsentInformation.ConsentStatus.NOT_REQUIRED) {
-                    callback.onNotUsingAdConsent()
-                }
-            }, { formError ->
-                // Handle the error.
-                callback.onConsentError(formError)
-            })
-
-//                if (consentInformation.isConsentFormAvailable) {
-//                    loadForm(consentInformation, callback)
-//                } else {
-//                    callback.onNotUsingAdConsent()
-//                }
-        }, { formError ->
-            // Handle the error.
-            callback.onConsentError(formError)
-        })
-    }
-
-    fun loadAndShowConsent(callback: IAdConsentCallBack) {
+    fun loadAndShowConsent(callback: IAdConsentCallBack, isShowDialog: Boolean) {
 
         consentInformation =
             UserMessagingPlatform.getConsentInformation(callback.getCurrentActivity())
@@ -129,7 +78,7 @@ object ITGAdConsent {
 
             val debugSettings = ConsentDebugSettings.Builder(callback.getCurrentActivity())
                 .setDebugGeography(ConsentDebugSettings.DebugGeography.DEBUG_GEOGRAPHY_EEA)
-                .addTestDeviceHashedId("ED3576D8FCF2F8C52AD8E98B4CFA4005").setForceTesting(true)
+                .addTestDeviceHashedId(callback.testDeviceID()).setForceTesting(true)
                 .build()
 
             ConsentRequestParameters.Builder().setTagForUnderAgeOfConsent(callback.isUnderAgeAd())
@@ -146,12 +95,14 @@ object ITGAdConsent {
         consentInformation?.requestConsentInfoUpdate(callback.getCurrentActivity(), params, {
             // The consent information state was updated.
             // You are now ready to check if a form is available.
-            callback.onLoadConsentSuccess()
+
 
             Log.v("ITGAdConsent", "requestConsentInfoUpdate success")
 
+
+
             if (consentInformation?.isConsentFormAvailable == true) {
-                loadForm(consentInformation!!, callback)
+                loadForm(consentInformation!!, isShowDialog, callback)
             } else {
                 callback.onNotUsingAdConsent()
             }
@@ -164,25 +115,34 @@ object ITGAdConsent {
 
     fun showDialogConsent(callback: IAdConsentCallBack) {
         if (consentInformation?.isConsentFormAvailable == true) {
-            loadForm(consentInformation!!, callback)
+            loadForm(consentInformation!!, true, callback)
         } else {
             callback.onNotUsingAdConsent()
         }
     }
 
-    private fun loadForm(consentInformation: ConsentInformation, callback: IAdConsentCallBack) {
+    private fun loadForm(
+        consentInformation: ConsentInformation,
+        isShowDialog: Boolean,
+        callback: IAdConsentCallBack
+    ) {
         // Loads a consent form. Must be called on the main thread.
         UserMessagingPlatform.loadConsentForm(callback.getCurrentActivity(), { consentForm ->
+            if (!isShowDialog){
+                callback.onConsentStatus(consentInformation.consentStatus)
+            }
             if (consentInformation.consentStatus == ConsentInformation.ConsentStatus.REQUIRED) {
-                consentForm.show(callback.getCurrentActivity()) { formError ->
-                    if (consentInformation.consentStatus == ConsentInformation.ConsentStatus.OBTAINED) {
-                        // App can start requesting ads.
-                        canPersonalized = canShowPersonalizedAds(callback.getCurrentActivity())
-                        callback.onConsentSuccess(canPersonalized)
+                if (isShowDialog) {
+                    consentForm.show(callback.getCurrentActivity()) { formError ->
+                        if (consentInformation.consentStatus == ConsentInformation.ConsentStatus.OBTAINED) {
+                            // App can start requesting ads.
+                            canPersonalized = canShowPersonalizedAds(callback.getCurrentActivity())
+                            callback.onConsentSuccess(canPersonalized)
+                        }
+//                    loadForm(consentInformation, callback)
+
+
                     }
-                    loadForm(consentInformation, callback)
-
-
                 }
             } else if (consentInformation.consentStatus == ConsentInformation.ConsentStatus.NOT_REQUIRED) {
                 callback.onNotUsingAdConsent()

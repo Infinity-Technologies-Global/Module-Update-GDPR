@@ -33,7 +33,7 @@ class MainActivity : AppCompatActivity(), IAdConsentCallBack {
             updateWithType(AppUpdateType.IMMEDIATE, isShowDialogUpdate)
         }
         binding.buttonLoadConsent.setOnClickListener {
-            ITGAdConsent.loadConsent(this)
+            ITGAdConsent.loadAndShowConsent(this,false)
             binding.buttonShowConsent.isEnabled = false
             binding.progressLoading.visibility = View.VISIBLE
         }
@@ -43,7 +43,7 @@ class MainActivity : AppCompatActivity(), IAdConsentCallBack {
         }
         binding.buttonLoadAndShowConsent.setOnClickListener {
             binding.progressLoading.visibility = View.VISIBLE
-            ITGAdConsent.loadAndShowConsent(this)
+            ITGAdConsent.loadAndShowConsent(this,true)
         }
         binding.buttonRestartConsent.setOnClickListener {
             ITGAdConsent.resetConsentDialog()
@@ -86,7 +86,11 @@ class MainActivity : AppCompatActivity(), IAdConsentCallBack {
 
 
     override fun onConsentSuccess(canPersonalized: Boolean) {
-        Log.v("ITGAdConsent", "onConsentSuccess")
+        if (canPersonalized){
+            Log.v("ITGAdConsent", "onConsentSuccess true")
+        }else{
+            Log.v("ITGAdConsent", "onConsentSuccess false")
+        }
         binding.progressLoading.visibility = View.GONE
         binding.buttonShowConsent.isEnabled = false
 
@@ -97,7 +101,9 @@ class MainActivity : AppCompatActivity(), IAdConsentCallBack {
         Log.v("ITGAdConsent", "formError  ${formError.message}")
     }
 
-    override fun onLoadConsentSuccess() {
+    override fun onConsentStatus(consentStatus: Int) {
+        Log.v("ITGAdConsent", "consentStatus  ${consentStatus}")
+
         binding.buttonShowConsent.isEnabled = true
         binding.progressLoading.visibility = View.GONE
     }

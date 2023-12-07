@@ -58,7 +58,7 @@ class LanguageActivity : AppCompatActivity(), IAdConsentCallBack {
         Log.v("ITGAdConsent", "formError  ${formError.message}")
     }
 
-    override fun onLoadConsentSuccess() {
+    override fun onConsentStatus(consentStatus: Int) {
 
     }
 }
