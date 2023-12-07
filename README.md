@@ -80,8 +80,13 @@ interface IAdConsentCallBack {
     
     fun onConsentError(formError: FormError)  
 	    //Load Consent Form error
-    fun onLoadConsentSuccess()  
-	    // Meaning Load Consent Form Success
+	    
+    fun onConsentStatus(consentStatus: Int)
+	    // return status 
+	    int UNKNOWN = 0;
+        int NOT_REQUIRED = 1;
+        int REQUIRED = 2;
+        int OBTAINED = 3;
 
 }
 ```
