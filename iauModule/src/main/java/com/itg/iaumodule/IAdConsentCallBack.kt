@@ -12,7 +12,7 @@ interface IAdConsentCallBack {
 
     fun onNotUsingAdConsent()
 
-    fun onConsentSuccess()
+    fun onConsentSuccess(canPersonalized: Boolean)
 
     fun onConsentError(formError: FormError)
     fun onLoadConsentSuccess()

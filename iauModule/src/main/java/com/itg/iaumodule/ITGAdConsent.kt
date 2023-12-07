@@ -12,6 +12,7 @@ import com.google.android.ump.UserMessagingPlatform
 
 object ITGAdConsent {
 
+    private var canPersonalized: Boolean = true
     private var consentInformation: ConsentInformation? = null
 
     fun getCountryCode(context: Context): String {
@@ -165,15 +166,19 @@ object ITGAdConsent {
         UserMessagingPlatform.loadConsentForm(callback.getCurrentActivity(), { consentForm ->
             if (consentInformation.consentStatus == ConsentInformation.ConsentStatus.REQUIRED) {
                 consentForm.show(callback.getCurrentActivity()) { formError ->
+                    canPersonalized = canShowPersonalizedAds(callback.getCurrentActivity())
                     if (consentInformation.consentStatus == ConsentInformation.ConsentStatus.OBTAINED) {
                         // App can start requesting ads.
-                        callback.onConsentSuccess()
+                        callback.onConsentSuccess(canPersonalized)
                     }
 
-                    val canPersonalized = canShowPersonalizedAds(callback.getCurrentActivity())
+
+                    loadForm(consentInformation, callback)
                     if (!canPersonalized) {
                         // Handle dismissal by reloading form.
-                        loadForm(consentInformation, callback)
+
+                    }else{
+
                     }
 
                 }
@@ -249,6 +254,10 @@ object ITGAdConsent {
 
     fun resetConsentDialog() {
         consentInformation?.reset()
+    }
+
+    fun isPersonalizedAd(): Boolean {
+        return canPersonalized
     }
 
 }

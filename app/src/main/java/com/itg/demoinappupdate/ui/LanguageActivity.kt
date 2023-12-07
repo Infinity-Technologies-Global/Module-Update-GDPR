@@ -49,7 +49,7 @@ class LanguageActivity : AppCompatActivity(), IAdConsentCallBack {
         Log.v("ITGAdConsent", "onNotUsingAdConsent")
     }
 
-    override fun onConsentSuccess() {
+    override fun onConsentSuccess(canPersonalized: Boolean) {
         Log.v("ITGAdConsent", "onConsentSuccess")
 
     }

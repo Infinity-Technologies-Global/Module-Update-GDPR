@@ -85,7 +85,7 @@ class MainActivity : AppCompatActivity(), IAdConsentCallBack {
     }
 
 
-    override fun onConsentSuccess() {
+    override fun onConsentSuccess(canPersonalized: Boolean) {
         Log.v("ITGAdConsent", "onConsentSuccess")
         binding.progressLoading.visibility = View.GONE
         binding.buttonShowConsent.isEnabled = false
