@@ -33,7 +33,7 @@ class MainActivity : AppCompatActivity(), IAdConsentCallBack {
             updateWithType(AppUpdateType.IMMEDIATE, isShowDialogUpdate)
         }
         binding.buttonLoadConsent.setOnClickListener {
-            ITGAdConsent.loadAndShowConsent(this,false)
+            ITGAdConsent.loadAndShowConsent(false,this)
             binding.buttonShowConsent.isEnabled = false
             binding.progressLoading.visibility = View.VISIBLE
         }
@@ -43,7 +43,7 @@ class MainActivity : AppCompatActivity(), IAdConsentCallBack {
         }
         binding.buttonLoadAndShowConsent.setOnClickListener {
             binding.progressLoading.visibility = View.VISIBLE
-            ITGAdConsent.loadAndShowConsent(this,true)
+            ITGAdConsent.loadAndShowConsent(true,this)
         }
         binding.buttonRestartConsent.setOnClickListener {
             ITGAdConsent.resetConsentDialog()

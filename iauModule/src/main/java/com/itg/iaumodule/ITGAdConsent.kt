@@ -68,7 +68,7 @@ object ITGAdConsent {
 //        loadConsent(callback)
 //    }
 
-    fun loadAndShowConsent(callback: IAdConsentCallBack, isShowDialog: Boolean) {
+    fun loadAndShowConsent(isShowDialog: Boolean,callback: IAdConsentCallBack, ) {
 
         consentInformation =
             UserMessagingPlatform.getConsentInformation(callback.getCurrentActivity())
@@ -88,9 +88,9 @@ object ITGAdConsent {
             ConsentRequestParameters.Builder().setTagForUnderAgeOfConsent(callback.isUnderAgeAd())
                 .build()
         }
-        if (callback.isDebug()) {
-            consentInformation?.reset() // Remove for Production build
-        }
+//        if (callback.isDebug()) {
+//            consentInformation?.reset() // Remove for Production build
+//        }
 
         consentInformation?.requestConsentInfoUpdate(callback.getCurrentActivity(), params, {
             // The consent information state was updated.
