@@ -133,12 +133,14 @@ object ITGAdConsent {
             }
             if (consentInformation.consentStatus == ConsentInformation.ConsentStatus.REQUIRED) {
                 if (isShowDialog) {
+                    callback.onRequestShowDialog()
                     consentForm.show(callback.getCurrentActivity()) { formError ->
-                        if (consentInformation.consentStatus == ConsentInformation.ConsentStatus.OBTAINED) {
-                            // App can start requesting ads.
-                            canPersonalized = canShowPersonalizedAds(callback.getCurrentActivity())
-                            callback.onConsentSuccess(canPersonalized)
-                        }
+//                        if (consentInformation.consentStatus == ConsentInformation.ConsentStatus.OBTAINED) {
+//                            // App can start requesting ads.
+//
+//                        }
+                        canPersonalized = canShowPersonalizedAds(callback.getCurrentActivity())
+                        callback.onConsentSuccess(canPersonalized)
 //                    loadForm(consentInformation, callback)
 
 

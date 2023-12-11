@@ -21,4 +21,5 @@ interface IAdConsentCallBack {
     fun testDeviceID(): String {
         return ""
     }
+    fun onRequestShowDialog()
 }

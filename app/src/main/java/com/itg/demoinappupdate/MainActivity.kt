@@ -107,4 +107,8 @@ class MainActivity : AppCompatActivity(), IAdConsentCallBack {
         binding.buttonShowConsent.isEnabled = true
         binding.progressLoading.visibility = View.GONE
     }
+
+    override fun onRequestShowDialog() {
+        Log.v("ITGAdConsent", "onRequestShowDialog  ")
+    }
 }

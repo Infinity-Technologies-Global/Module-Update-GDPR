@@ -61,4 +61,8 @@ class LanguageActivity : AppCompatActivity(), IAdConsentCallBack {
     override fun onConsentStatus(consentStatus: Int) {
 
     }
+
+    override fun onRequestShowDialog() {
+
+    }
 }
