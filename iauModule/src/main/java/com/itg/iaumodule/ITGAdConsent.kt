@@ -4,6 +4,8 @@ import android.content.Context
 import android.preference.PreferenceManager
 import android.telephony.TelephonyManager
 import android.util.Log
+import com.adjust.sdk.Adjust
+import com.adjust.sdk.AdjustThirdPartySharing
 import com.google.android.ump.ConsentDebugSettings
 import com.google.android.ump.ConsentInformation
 import com.google.android.ump.ConsentRequestParameters
@@ -15,11 +17,23 @@ object ITGAdConsent {
     private var canPersonalized: Boolean = true
     private var consentInformation: ConsentInformation? = null
 
+
+    /**
+     * Kiểm tra sau khi consent xong thì push lại cho adjust
+     */
+    private var afterActionCheckEEA = false
+
+    /**
+     * get Country Code by Telephony Service
+     */
     fun getCountryCode(context: Context): String {
         val tm = context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
         return tm.networkCountryIso.uppercase()
     }
 
+    /**
+     * get list Country Code in EEA
+     */
     fun listEEACountry(): List<String> {
         return listOf(
             "AT",
@@ -52,14 +66,24 @@ object ITGAdConsent {
         )
     }
 
+    /**
+     * get list Country Code in UK*
+     */
     fun listUKCountry(): List<String> {
         return listOf("GB", "GG", "IM", "JE")
     }
 
+
+    /**
+     * get list Country Code in EEA + UK*
+     */
     fun listAdConsentCountry(): List<String> {
         return listEEACountry() + listUKCountry()
     }
 
+    /**
+     * Check current country in list Country show Ad Consent
+     */
     fun isAdConsentCountry(context: Context): Boolean {
         return listAdConsentCountry().contains(getCountryCode(context))
     }
@@ -68,12 +92,16 @@ object ITGAdConsent {
 //        loadConsent(callback)
 //    }
 
-    fun loadAndShowConsent(isShowDialog: Boolean,callback: IAdConsentCallBack, ) {
+    /**
+     * Load and Show From Consent
+     */
+    fun loadAndShowConsent(isShowDialog: Boolean, callback: IAdConsentCallBack) {
 
         consentInformation =
             UserMessagingPlatform.getConsentInformation(callback.getCurrentActivity())
 
         // Set tag for underage of consent. false means users are not underage.
+        // Check if debug add test env location simulator EEA
         val params = if (callback.isDebug()) {
 
             val debugSettings = ConsentDebugSettings.Builder(callback.getCurrentActivity())
@@ -95,15 +123,12 @@ object ITGAdConsent {
         consentInformation?.requestConsentInfoUpdate(callback.getCurrentActivity(), params, {
             // The consent information state was updated.
             // You are now ready to check if a form is available.
-
-
             Log.v("ITGAdConsent", "requestConsentInfoUpdate success")
-
-
-
             if (consentInformation?.isConsentFormAvailable == true) {
                 loadForm(consentInformation!!, isShowDialog, callback)
+                afterActionCheckEEA = true
             } else {
+                afterActionCheckEEA = false
                 callback.onNotUsingAdConsent()
             }
         }, { formError ->
@@ -128,10 +153,11 @@ object ITGAdConsent {
     ) {
         // Loads a consent form. Must be called on the main thread.
         UserMessagingPlatform.loadConsentForm(callback.getCurrentActivity(), { consentForm ->
-            if (!isShowDialog){
+            if (!isShowDialog) {
                 callback.onConsentStatus(consentInformation.consentStatus)
             }
             if (consentInformation.consentStatus == ConsentInformation.ConsentStatus.REQUIRED) {
+                afterActionCheckEEA = true
                 if (isShowDialog) {
                     callback.onRequestShowDialog()
                     consentForm.show(callback.getCurrentActivity()) { formError ->
@@ -140,13 +166,15 @@ object ITGAdConsent {
 //
 //                        }
                         canPersonalized = canShowPersonalizedAds(callback.getCurrentActivity())
+                        submitDataGoogleDMA()
                         callback.onConsentSuccess(canPersonalized)
 //                    loadForm(consentInformation, callback)
-
 
                     }
                 }
             } else if (consentInformation.consentStatus == ConsentInformation.ConsentStatus.NOT_REQUIRED) {
+                afterActionCheckEEA = false
+                submitDataGoogleDMA()
                 callback.onNotUsingAdConsent()
             }
         }, { formError ->
@@ -216,12 +244,51 @@ object ITGAdConsent {
         return true
     }
 
+
+    /**
+     * @Warning
+     * Reset Consent Dialog
+     * không nên xử dụng func này. Khi dùng phải hỏi kỹ và thảo luận với các anh em dev khác
+     */
     fun resetConsentDialog() {
         consentInformation?.reset()
     }
 
+    /**
+     * check is Personalized Accepted Ads
+     */
     fun isPersonalizedAd(): Boolean {
         return canPersonalized
     }
 
+
+    /**
+     * Submit Data Google DMA
+     * @link https://help.adjust.com/en/article/privacy-features-android-sdk?src=search_page#provide-consent-data-to-google-digital-markets-act-compliance
+     */
+    fun submitDataGoogleDMA() {
+
+        val currentIsPersonalizedAd = isPersonalizedAd()
+        val adjustThirdPartySharing = AdjustThirdPartySharing(true)
+        adjustThirdPartySharing.addGranularOption(
+            "google_dma",
+            "eea",
+            if (afterActionCheckEEA) "1" else "0"
+        )
+        adjustThirdPartySharing.addGranularOption(
+            "google_dma",
+            "ad_personalization",
+            if (currentIsPersonalizedAd) "1" else "0"
+        )
+        adjustThirdPartySharing.addGranularOption("google_dma", "ad_user_data", "1")
+
+        Log.e(
+            "ITGAdConsent",
+            "submitDataGoogleDMA: google_dma ->" +
+                    "eea: ${adjustThirdPartySharing.granularOptions["google_dma"]?.get("eea")}," +
+                    "ad_personalization: ${adjustThirdPartySharing.granularOptions["google_dma"]?.get("ad_personalization")}," +
+                    "ad_user_data: ${adjustThirdPartySharing.granularOptions["google_dma"]?.get("ad_user_data")}"
+        )
+        Adjust.trackThirdPartySharing(adjustThirdPartySharing);
+    }
 }
